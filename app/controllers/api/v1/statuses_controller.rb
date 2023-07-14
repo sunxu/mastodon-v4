@@ -53,6 +53,7 @@ class Api::V1::StatusesController < Api::BaseController
   def create
     @status = PostStatusService.new.call(
       current_user.account,
+      id: status_params[:id],
       text: status_params[:status],
       thread: @thread,
       media_ids: status_params[:media_ids],
@@ -121,6 +122,7 @@ class Api::V1::StatusesController < Api::BaseController
 
   def status_params
     params.permit(
+      :id,
       :status,
       :in_reply_to_id,
       :sensitive,
@@ -128,6 +130,7 @@ class Api::V1::StatusesController < Api::BaseController
       :visibility,
       :language,
       :scheduled_at,
+      :created_at,
       media_ids: [],
       media_attributes: [
         :id,

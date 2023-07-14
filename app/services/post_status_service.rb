@@ -52,12 +52,14 @@ class PostStatusService < BaseService
   private
 
   def preprocess_attributes!
+    @id           = @options[:id] if !@options[:id].nil? && @options[:id] > 0
     @sensitive    = (@options[:sensitive].nil? ? @account.user&.setting_default_sensitive : @options[:sensitive]) || @options[:spoiler_text].present?
     @text         = @options.delete(:spoiler_text) if @text.blank? && @options[:spoiler_text].present?
     @visibility   = @options[:visibility] || @account.user&.setting_default_privacy
     @visibility   = :unlisted if @visibility&.to_sym == :public && @account.silenced?
     @scheduled_at = @options[:scheduled_at]&.to_datetime
     @scheduled_at = nil if scheduled_in_the_past?
+    @created_at = @options[:created_at]&.to_datetime
   rescue ArgumentError
     raise ActiveRecord::RecordInvalid
   end
@@ -160,12 +162,15 @@ class PostStatusService < BaseService
 
   def status_attributes
     {
+      id: @id,
       text: @text,
       media_attachments: @media || [],
       ordered_media_attachment_ids: (@options[:media_ids] || []).map(&:to_i) & @media.map(&:id),
       thread: @in_reply_to,
       poll_attributes: poll_attributes,
       sensitive: @sensitive,
+      created_at: @created_at,
+      updated_at: @created_at,
       spoiler_text: @options[:spoiler_text] || '',
       visibility: @visibility,
       language: valid_locale_cascade(@options[:language], @account.user&.preferred_posting_language, I18n.default_locale),
